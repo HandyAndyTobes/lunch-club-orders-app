@@ -3,12 +3,13 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, ClipboardList, Package, Calendar, Settings } from "lucide-react";
+import { Users, ClipboardList, Package, Calendar, Settings, UtensilsCrossed } from "lucide-react";
 import OrderForm from "@/components/OrderForm";
 import OrdersList from "@/components/OrdersList";
 import DessertManager from "@/components/DessertManager";
 import AttendanceSummary from "@/components/AttendanceSummary";
 import AdminControls from "@/components/AdminControls";
+import MenuManager from "@/components/MenuManager";
 
 const Index = () => {
   const [userRole, setUserRole] = useState<"volunteer" | "admin">("volunteer");
@@ -70,7 +71,7 @@ const Index = () => {
         ) : (
           // Admin View - Full Dashboard
           <Tabs defaultValue="orders" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5 bg-white/80 backdrop-blur-sm">
+            <TabsList className="grid w-full grid-cols-6 bg-white/80 backdrop-blur-sm">
               <TabsTrigger value="orders" className="flex items-center space-x-2">
                 <ClipboardList className="w-4 h-4" />
                 <span className="hidden sm:inline">Orders</span>
@@ -82,6 +83,10 @@ const Index = () => {
               <TabsTrigger value="attendance" className="flex items-center space-x-2">
                 <Calendar className="w-4 h-4" />
                 <span className="hidden sm:inline">Attendance</span>
+              </TabsTrigger>
+              <TabsTrigger value="menu" className="flex items-center space-x-2">
+                <UtensilsCrossed className="w-4 h-4" />
+                <span className="hidden sm:inline">Menu</span>
               </TabsTrigger>
               <TabsTrigger value="admin" className="flex items-center space-x-2">
                 <Settings className="w-4 h-4" />
@@ -108,6 +113,12 @@ const Index = () => {
             <TabsContent value="attendance">
               <Card className="p-6 bg-white/80 backdrop-blur-sm border-green-100 shadow-lg">
                 <AttendanceSummary currentWeek={currentWeek} />
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="menu">
+              <Card className="p-6 bg-white/80 backdrop-blur-sm border-green-100 shadow-lg">
+                <MenuManager />
               </Card>
             </TabsContent>
 

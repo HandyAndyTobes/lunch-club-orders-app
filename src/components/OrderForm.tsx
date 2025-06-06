@@ -22,6 +22,25 @@ const OrderForm = ({ currentWeek }: OrderFormProps) => {
     { name: "Ice Cream", startingStock: 15, remainingStock: 15, active: true },
     { name: "Fruit Salad", startingStock: 12, remainingStock: 12, active: true },
   ]);
+  
+  // Get meal and sub-item options from local storage with fallbacks
+  const [mealOptions] = useLocalStorage<string[]>("mealOptions", [
+    "Soup of the Day",
+    "Ham & Cheese Panini", 
+    "Roast Dinner",
+    "Fish & Chips",
+    "Jacket Potato",
+    "Chicken Salad"
+  ]);
+
+  const [subItemOptions] = useLocalStorage<string[]>("subItemOptions", [
+    "Buttered Bread",
+    "Side Salad", 
+    "Chips",
+    "Coleslaw",
+    "Garlic Bread",
+    "Extra Vegetables"
+  ]);
 
   const [formData, setFormData] = useState({
     customerName: "",
@@ -33,24 +52,6 @@ const OrderForm = ({ currentWeek }: OrderFormProps) => {
     tableNumber: "",
     paidAmount: "",
   });
-
-  const mealOptions = [
-    "Soup of the Day",
-    "Ham & Cheese Panini", 
-    "Roast Dinner",
-    "Fish & Chips",
-    "Jacket Potato",
-    "Chicken Salad"
-  ];
-
-  const subItemOptions = [
-    "Buttered Bread",
-    "Side Salad", 
-    "Chips",
-    "Coleslaw",
-    "Garlic Bread",
-    "Extra Vegetables"
-  ];
 
   const handleSubItemChange = (item: string, checked: boolean) => {
     if (checked) {

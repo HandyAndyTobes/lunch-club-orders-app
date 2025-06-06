@@ -1,151 +1,161 @@
-
-import { useEffect, useState } from "react";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
-import { Input } from "@/components/ui/input";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-import { createOrder } from "./orderUtils";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
+import CustomerInfoFields from "./order/CustomerInfoFields";
+import MealSelectionField from "./order/MealSelectionField";
+import SubItemsField from "./order/SubItemsField";
+import DessertDrinkFields from "./order/DessertDrinkFields";
+import PaymentRequestFields from "./order/PaymentRequestFields";
+import {
+  DessertItem,
+  OrderFormData,
+  createNewOrder,
+  getInitialFormData,
+  validateOrderForm,
+  checkDessertStock,
+  updateDessertInventory
+} from "@/utils/orderUtils";
+import { supabase } from "@/integrations/supabase/client";
 
-const OrderForm = ({
-  currentWeek,
-  mode = "admin"
-}: {
+interface OrderFormProps {
   currentWeek: string;
-  mode?: "admin" | "public";
-}) => {
-  const [form, setForm] = useState({
-    name: "",
-    meal: "",
-    dessert: "",
-    drink: "",
-    paidAmount: "",
-    usePayItForward: false,
-    isVolunteerMeal: false
-  });
+}
 
+const OrderForm = ({ currentWeek }: OrderFormProps) => {
   const [orders, setOrders] = useLocalStorage<any[]>("orders", []);
-  const [menu, setMenu] = useLocalStorage("menu", []);
-  const [desserts, setDesserts] = useLocalStorage("desserts", []);
+  const [dessertInventory, setDessertInventory] = useLocalStorage<DessertItem[]>("dessertInventory", [
+    { name: "Chocolate Cake", startingStock: 10, remainingStock: 10, active: true },
+    { name: "Apple Pie", startingStock: 8, remainingStock: 8, active: true },
+    { name: "Ice Cream", startingStock: 15, remainingStock: 15, active: true },
+    { name: "Fruit Salad", startingStock: 12, remainingStock: 12, active: true },
+  ]);
 
-  const handleChange = (e: any) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+  const [mealOptions] = useLocalStorage<string[]>("mealOptions", [
+    "Soup of the Day",
+    "Ham & Cheese Panini",
+    "Roast Dinner",
+    "Fish & Chips",
+    "Jacket Potato",
+    "Chicken Salad"
+  ]);
+
+  const [subItemOptions] = useLocalStorage<string[]>("subItemOptions", [
+    "Buttered Bread",
+    "Side Salad",
+    "Chips",
+    "Coleslaw",
+    "Garlic Bread",
+    "Extra Vegetables"
+  ]);
+
+  const [formData, setFormData] = useState<OrderFormData>(getInitialFormData());
+  const [payItForwardBalance, setPayItForwardBalance] = useState<number>(0);
+
+  const handleFormUpdate = (update: Partial<OrderFormData>) => {
+    setFormData(prev => ({ ...prev, ...update }));
   };
 
-  const handleSubmit = () => {
-    const newOrder = {
-      ...form,
-      week: currentWeek,
-      paidAmount: mode === "public" || form.isVolunteerMeal ? "0.00" : form.paidAmount,
-      usePayItForward: mode === "public" ? false : form.usePayItForward,
-      isVolunteerMeal: mode === "public" ? false : form.isVolunteerMeal,
-    };
+  const fetchPayItForwardBalance = async () => {
+    const { data, error } = await supabase
+      .from("pay_it_forward_balance")
+      .select("current_balance")
+      .single();
 
-    if (!newOrder.name || !newOrder.meal) {
-      toast({
-        title: "Missing Information",
-        description: "Please enter your name and select a meal.",
-        variant: "destructive",
-      });
-      return;
+    if (!error && data) {
+      setPayItForwardBalance(data.current_balance);
+    }
+  };
+
+  useEffect(() => {
+    fetchPayItForwardBalance();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validateOrderForm(formData)) return;
+
+    if (!checkDessertStock(formData.dessert, dessertInventory)) return;
+
+    const adjustedPaidAmount = formData.usePayItForward ? "0.00" : formData.paidAmount;
+
+    const newOrder = createNewOrder({ ...formData, paidAmount: adjustedPaidAmount }, currentWeek);
+
+    // Update dessert inventory
+    if (formData.dessert) {
+      const updatedInventory = updateDessertInventory(formData.dessert, dessertInventory);
+      setDessertInventory(updatedInventory);
     }
 
-    const order = createOrder(newOrder);
-    setOrders([...orders, order]);
+    // Save the order
+    setOrders([...orders, newOrder]);
+
+    // Log Pay It Forward usage if selected
+    if (formData.usePayItForward && parseFloat(formData.paidAmount) > 0) {
+      const { error } = await supabase.from("pay_it_forward_usage").insert({
+        recipient_name: formData.customerName,
+        amount: parseFloat(formData.paidAmount),
+        notes: `Used via order on ${currentWeek}`,
+        order_id: newOrder.id || null
+      });
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Pay It Forward usage could not be recorded.",
+          variant: "destructive",
+        });
+      } else {
+        fetchPayItForwardBalance(); // Refresh balance display
+      }
+    }
 
     toast({
-      title: "Order Submitted",
-      description: "Your lunch order has been saved!",
+      title: "Order Submitted!",
+      description: `Order for ${formData.customerName} has been recorded.`,
     });
 
-    setForm({
-      name: "",
-      meal: "",
-      dessert: "",
-      drink: "",
-      paidAmount: "",
-      usePayItForward: false,
-      isVolunteerMeal: false,
-    });
+    setFormData(getInitialFormData());
   };
 
+  const availableDesserts = dessertInventory.filter(d => d.active && d.remainingStock > 0);
+
   return (
-    <div className="space-y-4">
-      <div>
-        <Label>Name</Label>
-        <Input name="name" value={form.name} onChange={handleChange} />
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <CustomerInfoFields formData={formData} onFormChange={handleFormUpdate} />
+
+      <MealSelectionField formData={formData} onFormChange={handleFormUpdate} mealOptions={mealOptions} />
+
+      <SubItemsField formData={formData} onFormChange={handleFormUpdate} subItemOptions={subItemOptions} />
+
+      <DessertDrinkFields formData={formData} onFormChange={handleFormUpdate} availableDesserts={availableDesserts} />
+
+      <PaymentRequestFields formData={formData} onFormChange={handleFormUpdate} />
+
+      <div className="space-y-1">
+        <Label className="text-sm text-pink-700 flex items-center space-x-2">
+          <Checkbox
+            checked={formData.usePayItForward}
+            onCheckedChange={(checked) => handleFormUpdate({ usePayItForward: checked })}
+            disabled={parseFloat(formData.paidAmount) > payItForwardBalance}
+          />
+          <span>Use Pay It Forward Fund?</span>
+        </Label>
+        <p className="text-xs text-pink-600">
+          Available: £{payItForwardBalance.toFixed(2)}
+        </p>
       </div>
 
-      <div>
-        <Label>Meal</Label>
-        <select name="meal" value={form.meal} onChange={handleChange} className="w-full border p-2 rounded">
-          <option value="">Select a meal</option>
-          {menu.map((m: any, idx: number) => (
-            <option key={idx} value={m}>
-              {m}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div>
-        <Label>Dessert</Label>
-        <select name="dessert" value={form.dessert} onChange={handleChange} className="w-full border p-2 rounded">
-          <option value="">Select a dessert</option>
-          {desserts.map((d: any, idx: number) => (
-            <option key={idx} value={d}>
-              {d}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div>
-        <Label>Drink</Label>
-        <Input name="drink" value={form.drink} onChange={handleChange} />
-      </div>
-
-      {mode !== "public" && (
-        <>
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              checked={form.usePayItForward}
-              onCheckedChange={(checked) =>
-                setForm((prev) => ({ ...prev, usePayItForward: !!checked }))
-              }
-              id="pif"
-            />
-            <Label htmlFor="pif">Use Pay It Forward</Label>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              checked={form.isVolunteerMeal}
-              onCheckedChange={(checked) =>
-                setForm((prev) => ({ ...prev, isVolunteerMeal: !!checked }))
-              }
-              id="volunteer"
-            />
-            <Label htmlFor="volunteer">Volunteer Meal (Free)</Label>
-          </div>
-
-          <div>
-            <Label>Amount Paid (£)</Label>
-            <Input
-              name="paidAmount"
-              type="number"
-              step="0.01"
-              value={form.paidAmount}
-              onChange={handleChange}
-            />
-          </div>
-        </>
-      )}
-
-      <Button onClick={handleSubmit}>Submit Order</Button>
-    </div>
+      <Button
+        type="submit"
+        className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-medium py-3"
+      >
+        Submit Order
+      </Button>
+    </form>
   );
 };
 

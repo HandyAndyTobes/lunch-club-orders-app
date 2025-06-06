@@ -6,12 +6,29 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, Users, PoundSterling, TrendingUp } from "lucide-react";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 
+interface Order {
+  customerName: string;
+  mealChoice: string;
+  week: string;
+  paidAmount: string;
+  tableNumber?: string;
+  timestamp: string;
+  id: string;
+}
+
+interface CustomerSummary {
+  name: string;
+  orders: Order[];
+  totalSpent: number;
+  tableNumber?: string;
+}
+
 interface AttendanceSummaryProps {
   currentWeek: string;
 }
 
 const AttendanceSummary = ({ currentWeek }: AttendanceSummaryProps) => {
-  const [orders] = useLocalStorage<any[]>("orders", []);
+  const [orders] = useLocalStorage<Order[]>("orders", []);
   const [selectedWeek, setSelectedWeek] = useState(currentWeek);
 
   // Get all unique weeks from orders
@@ -23,7 +40,10 @@ const AttendanceSummary = ({ currentWeek }: AttendanceSummaryProps) => {
   // Calculate summary data
   const totalAttendees = weekOrders.length;
   const uniqueCustomers = [...new Set(weekOrders.map(order => order.customerName))].length;
-  const totalRevenue = weekOrders.reduce((sum, order) => sum + (parseFloat(order.paidAmount) || 0), 0);
+  const totalRevenue = weekOrders.reduce((sum, order) => {
+    const amount = parseFloat(order.paidAmount);
+    return sum + (isNaN(amount) ? 0 : amount);
+  }, 0);
   const averageSpend = totalAttendees > 0 ? totalRevenue / totalAttendees : 0;
 
   // Group orders by customer for detailed view
@@ -38,9 +58,10 @@ const AttendanceSummary = ({ currentWeek }: AttendanceSummaryProps) => {
       };
     }
     acc[name].orders.push(order);
-    acc[name].totalSpent += parseFloat(order.paidAmount) || 0;
+    const amount = parseFloat(order.paidAmount);
+    acc[name].totalSpent += isNaN(amount) ? 0 : amount;
     return acc;
-  }, {} as Record<string, any>);
+  }, {} as Record<string, CustomerSummary>);
 
   const customers = Object.values(customerSummary);
 

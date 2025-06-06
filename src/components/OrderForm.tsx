@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -51,7 +52,12 @@ const OrderForm = ({ currentWeek }: OrderFormProps) => {
     "Extra Vegetables"
   ]);
 
-  const [formData, setFormData] = useState<OrderFormData>(getInitialFormData());
+  const [formData, setFormData] = useState<OrderFormData>({
+    ...getInitialFormData(),
+    usePayItForward: false,
+    isVolunteerMeal: false,
+  });
+
   const [payItForwardBalance, setPayItForwardBalance] = useState<number>(0);
 
   const handleFormUpdate = (update: Partial<OrderFormData>) => {
@@ -77,12 +83,15 @@ const OrderForm = ({ currentWeek }: OrderFormProps) => {
     e.preventDefault();
 
     if (!validateOrderForm(formData)) return;
-
     if (!checkDessertStock(formData.dessert, dessertInventory)) return;
 
-    const adjustedPaidAmount = formData.usePayItForward ? "0.00" : formData.paidAmount;
+    // Set final paid amount based on volunteer or pay-it-forward selection
+    let finalPaidAmount = "0.00";
+    if (!formData.isVolunteerMeal && !formData.usePayItForward) {
+      finalPaidAmount = formData.paidAmount;
+    }
 
-    const newOrder = createNewOrder({ ...formData, paidAmount: adjustedPaidAmount }, currentWeek);
+    const newOrder = createNewOrder({ ...formData, paidAmount: finalPaidAmount }, currentWeek);
 
     // Update dessert inventory
     if (formData.dessert) {
@@ -90,11 +99,9 @@ const OrderForm = ({ currentWeek }: OrderFormProps) => {
       setDessertInventory(updatedInventory);
     }
 
-    // Save the order
     setOrders([...orders, newOrder]);
 
-    // Log Pay It Forward usage if selected
-    if (formData.usePayItForward && parseFloat(formData.paidAmount) > 0) {
+    if (formData.usePayItForward && !formData.isVolunteerMeal && parseFloat(formData.paidAmount) > 0) {
       const { error } = await supabase.from("pay_it_forward_usage").insert({
         recipient_name: formData.customerName,
         amount: parseFloat(formData.paidAmount),
@@ -109,7 +116,7 @@ const OrderForm = ({ currentWeek }: OrderFormProps) => {
           variant: "destructive",
         });
       } else {
-        fetchPayItForwardBalance(); // Refresh balance display
+        fetchPayItForwardBalance();
       }
     }
 
@@ -118,7 +125,11 @@ const OrderForm = ({ currentWeek }: OrderFormProps) => {
       description: `Order for ${formData.customerName} has been recorded.`,
     });
 
-    setFormData(getInitialFormData());
+    setFormData({
+      ...getInitialFormData(),
+      usePayItForward: false,
+      isVolunteerMeal: false,
+    });
   };
 
   const availableDesserts = dessertInventory.filter(d => d.active && d.remainingStock > 0);
@@ -126,21 +137,30 @@ const OrderForm = ({ currentWeek }: OrderFormProps) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <CustomerInfoFields formData={formData} onFormChange={handleFormUpdate} />
-
       <MealSelectionField formData={formData} onFormChange={handleFormUpdate} mealOptions={mealOptions} />
-
       <SubItemsField formData={formData} onFormChange={handleFormUpdate} subItemOptions={subItemOptions} />
-
       <DessertDrinkFields formData={formData} onFormChange={handleFormUpdate} availableDesserts={availableDesserts} />
-
       <PaymentRequestFields formData={formData} onFormChange={handleFormUpdate} />
+
+      <div className="space-y-1">
+        <Label className="text-sm text-green-700 flex items-center space-x-2">
+          <Checkbox
+            checked={formData.isVolunteerMeal}
+            onCheckedChange={(checked) => handleFormUpdate({
+              isVolunteerMeal: checked,
+              usePayItForward: checked ? false : formData.usePayItForward
+            })}
+          />
+          <span>This is a volunteer meal</span>
+        </Label>
+      </div>
 
       <div className="space-y-1">
         <Label className="text-sm text-pink-700 flex items-center space-x-2">
           <Checkbox
             checked={formData.usePayItForward}
             onCheckedChange={(checked) => handleFormUpdate({ usePayItForward: checked })}
-            disabled={parseFloat(formData.paidAmount) > payItForwardBalance}
+            disabled={parseFloat(formData.paidAmount) > payItForwardBalance || formData.isVolunteerMeal}
           />
           <span>Use Pay It Forward Fund?</span>
         </Label>

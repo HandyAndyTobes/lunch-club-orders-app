@@ -3,13 +3,15 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, ClipboardList, Package, Calendar, Settings, UtensilsCrossed } from "lucide-react";
+import { Users, ClipboardList, Package, Calendar, Settings, UtensilsCrossed, Heart } from "lucide-react";
 import OrderForm from "@/components/OrderForm";
 import OrdersList from "@/components/OrdersList";
 import DessertManager from "@/components/DessertManager";
 import AttendanceSummary from "@/components/AttendanceSummary";
 import AdminControls from "@/components/AdminControls";
 import MenuManager from "@/components/MenuManager";
+import PayItForwardManager from "@/components/PayItForwardManager";
+import PayItForwardBalance from "@/components/PayItForwardBalance";
 
 const Index = () => {
   const [userRole, setUserRole] = useState<"volunteer" | "admin">("volunteer");
@@ -58,8 +60,9 @@ const Index = () => {
 
       <div className="max-w-4xl mx-auto px-4 py-6">
         {userRole === "volunteer" ? (
-          // Volunteer View - Simple Order Form
+          // Volunteer View - Simple Order Form + Pay It Forward Balance
           <div className="space-y-6">
+            <PayItForwardBalance />
             <Card className="p-6 bg-white/80 backdrop-blur-sm border-green-100 shadow-lg">
               <div className="flex items-center space-x-3 mb-6">
                 <ClipboardList className="w-6 h-6 text-green-600" />
@@ -71,7 +74,7 @@ const Index = () => {
         ) : (
           // Admin View - Full Dashboard
           <Tabs defaultValue="orders" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-6 bg-white/80 backdrop-blur-sm">
+            <TabsList className="grid w-full grid-cols-7 bg-white/80 backdrop-blur-sm">
               <TabsTrigger value="orders" className="flex items-center space-x-2">
                 <ClipboardList className="w-4 h-4" />
                 <span className="hidden sm:inline">Orders</span>
@@ -87,6 +90,10 @@ const Index = () => {
               <TabsTrigger value="menu" className="flex items-center space-x-2">
                 <UtensilsCrossed className="w-4 h-4" />
                 <span className="hidden sm:inline">Menu</span>
+              </TabsTrigger>
+              <TabsTrigger value="pay-it-forward" className="flex items-center space-x-2">
+                <Heart className="w-4 h-4" />
+                <span className="hidden sm:inline">Pay Forward</span>
               </TabsTrigger>
               <TabsTrigger value="admin" className="flex items-center space-x-2">
                 <Settings className="w-4 h-4" />
@@ -119,6 +126,12 @@ const Index = () => {
             <TabsContent value="menu">
               <Card className="p-6 bg-white/80 backdrop-blur-sm border-green-100 shadow-lg">
                 <MenuManager />
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="pay-it-forward">
+              <Card className="p-6 bg-white/80 backdrop-blur-sm border-green-100 shadow-lg">
+                <PayItForwardManager />
               </Card>
             </TabsContent>
 

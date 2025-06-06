@@ -9,10 +9,67 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      pay_it_forward_donations: {
+        Row: {
+          amount: number
+          created_at: string
+          donor_name: string
+          id: string
+          notes: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          donor_name: string
+          id?: string
+          notes?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          donor_name?: string
+          id?: string
+          notes?: string | null
+        }
+        Relationships: []
+      }
+      pay_it_forward_usage: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          notes: string | null
+          order_id: string | null
+          recipient_name: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          order_id?: string | null
+          recipient_name: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          order_id?: string | null
+          recipient_name?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
-      [_ in never]: never
+      pay_it_forward_balance: {
+        Row: {
+          current_balance: number | null
+          total_donations: number | null
+          total_used: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never

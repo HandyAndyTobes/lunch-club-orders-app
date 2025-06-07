@@ -7,8 +7,8 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Navigate to="/public-order" replace />} />
-        <Route path="/admin" element={<Index />} />
+        <Route path="/" element={<Index />} />
+        <Route path="/admin" element={<Navigate to="/" replace />} />
         <Route path="/public-order" element={<PublicOrderPage />} />
       </Routes>
     </Router>

@@ -1,6 +1,6 @@
 
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import Index from "./Index";
+import Index from "./pages/Index";
 import PublicOrderPage from "./PublicOrderPage";
 
 function App() {

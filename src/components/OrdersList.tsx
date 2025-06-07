@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +16,17 @@ const OrdersList = ({ currentWeek }: OrdersListProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterTable, setFilterTable] = useState("all");
 
+  // Debug logging
+  useEffect(() => {
+    console.log('OrdersList - All orders:', orders);
+    console.log('OrdersList - Current week:', currentWeek);
+  }, [orders, currentWeek]);
+
   const currentWeekOrders = orders.filter(order => order.week === currentWeek);
+  
+  useEffect(() => {
+    console.log('OrdersList - Filtered orders for current week:', currentWeekOrders);
+  }, [currentWeekOrders]);
   
   const filteredOrders = currentWeekOrders.filter(order => {
     const matchesSearch = order.customerName.toLowerCase().includes(searchTerm.toLowerCase());
@@ -36,6 +46,11 @@ const OrdersList = ({ currentWeek }: OrdersListProps) => {
           <Search className="w-4 h-4 text-white" />
         </div>
         <h2 className="text-2xl font-bold text-gray-900">Orders This Week</h2>
+      </div>
+
+      {/* Debug Info */}
+      <div className="bg-yellow-50 border border-yellow-200 rounded p-3 text-sm">
+        <strong>Debug Info:</strong> Total orders in storage: {orders.length}, Current week orders: {currentWeekOrders.length}
       </div>
 
       {/* Summary Cards */}

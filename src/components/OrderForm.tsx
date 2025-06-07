@@ -52,6 +52,13 @@ const OrderForm = ({ currentWeek, mode = "admin" }: OrderFormProps) => {
 
   const [formData, setFormData] = useState<OrderFormData>(getInitialFormData());
 
+  // Debug logging
+  useEffect(() => {
+    console.log(`OrderForm (${mode}) - Current orders:`, orders);
+    console.log(`OrderForm (${mode}) - Current week:`, currentWeek);
+    console.log(`OrderForm (${mode}) - Meal options:`, mealOptions);
+  }, [orders, currentWeek, mealOptions, mode]);
+
   const handleFormUpdate = (update: Partial<OrderFormData>) => {
     setFormData(prev => ({ ...prev, ...update }));
   };
@@ -59,11 +66,14 @@ const OrderForm = ({ currentWeek, mode = "admin" }: OrderFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    console.log(`Submitting order from ${mode} mode:`, formData);
+
     if (!validateOrderForm(formData)) return;
 
     if (!checkDessertStock(formData.dessert, dessertInventory)) return;
 
     const newOrder = createNewOrder(formData, currentWeek);
+    console.log(`Created new order:`, newOrder);
 
     // Update dessert inventory
     if (formData.dessert) {
@@ -72,7 +82,9 @@ const OrderForm = ({ currentWeek, mode = "admin" }: OrderFormProps) => {
     }
 
     // Save the order
-    setOrders([...orders, newOrder]);
+    const updatedOrders = [...orders, newOrder];
+    console.log(`Saving orders to localStorage:`, updatedOrders);
+    setOrders(updatedOrders);
 
     toast({
       title: "Order Submitted!",

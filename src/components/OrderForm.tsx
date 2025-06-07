@@ -1,7 +1,6 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import CustomerInfoFields from "./order/CustomerInfoFields";
@@ -18,13 +17,13 @@ import {
   checkDessertStock,
   updateDessertInventory
 } from "@/utils/orderUtils";
-import { supabase } from "@/integrations/supabase/client";
 
 interface OrderFormProps {
   currentWeek: string;
+  mode?: "admin" | "public";
 }
 
-const OrderForm = ({ currentWeek }: OrderFormProps) => {
+const OrderForm = ({ currentWeek, mode = "admin" }: OrderFormProps) => {
   const [orders, setOrders] = useLocalStorage<any[]>("orders", []);
   const [dessertInventory, setDessertInventory] = useLocalStorage<DessertItem[]>("dessertInventory", [
     { name: "Chocolate Cake", startingStock: 10, remainingStock: 10, active: true },
@@ -52,26 +51,10 @@ const OrderForm = ({ currentWeek }: OrderFormProps) => {
   ]);
 
   const [formData, setFormData] = useState<OrderFormData>(getInitialFormData());
-  const [payItForwardBalance, setPayItForwardBalance] = useState<number>(0);
 
   const handleFormUpdate = (update: Partial<OrderFormData>) => {
     setFormData(prev => ({ ...prev, ...update }));
   };
-
-  const fetchPayItForwardBalance = async () => {
-    const { data, error } = await supabase
-      .from("pay_it_forward_balance")
-      .select("current_balance")
-      .single();
-
-    if (!error && data) {
-      setPayItForwardBalance(data.current_balance);
-    }
-  };
-
-  useEffect(() => {
-    fetchPayItForwardBalance();
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,9 +63,7 @@ const OrderForm = ({ currentWeek }: OrderFormProps) => {
 
     if (!checkDessertStock(formData.dessert, dessertInventory)) return;
 
-    const adjustedPaidAmount = formData.usePayItForward ? "0.00" : formData.paidAmount;
-
-    const newOrder = createNewOrder({ ...formData, paidAmount: adjustedPaidAmount }, currentWeek);
+    const newOrder = createNewOrder(formData, currentWeek);
 
     // Update dessert inventory
     if (formData.dessert) {
@@ -92,26 +73,6 @@ const OrderForm = ({ currentWeek }: OrderFormProps) => {
 
     // Save the order
     setOrders([...orders, newOrder]);
-
-    // Log Pay It Forward usage if selected
-    if (formData.usePayItForward && parseFloat(formData.paidAmount) > 0) {
-      const { error } = await supabase.from("pay_it_forward_usage").insert({
-        recipient_name: formData.customerName,
-        amount: parseFloat(formData.paidAmount),
-        notes: `Used via order on ${currentWeek}`,
-        order_id: newOrder.id || null
-      });
-
-      if (error) {
-        toast({
-          title: "Error",
-          description: "Pay It Forward usage could not be recorded.",
-          variant: "destructive",
-        });
-      } else {
-        fetchPayItForwardBalance(); // Refresh balance display
-      }
-    }
 
     toast({
       title: "Order Submitted!",
@@ -125,35 +86,42 @@ const OrderForm = ({ currentWeek }: OrderFormProps) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <CustomerInfoFields formData={formData} onFormChange={handleFormUpdate} />
+      <CustomerInfoFields 
+        formData={formData} 
+        onFormChange={handleFormUpdate} 
+        mode={mode}
+      />
 
-      <MealSelectionField formData={formData} onFormChange={handleFormUpdate} mealOptions={mealOptions} />
+      <MealSelectionField 
+        formData={formData} 
+        onFormChange={handleFormUpdate} 
+        mealOptions={mealOptions} 
+      />
 
-      <SubItemsField formData={formData} onFormChange={handleFormUpdate} subItemOptions={subItemOptions} />
+      <SubItemsField 
+        formData={formData} 
+        onFormChange={handleFormUpdate} 
+        subItemOptions={subItemOptions} 
+      />
 
-      <DessertDrinkFields formData={formData} onFormChange={handleFormUpdate} availableDesserts={availableDesserts} />
+      <DessertDrinkFields 
+        formData={formData} 
+        onFormChange={handleFormUpdate} 
+        availableDesserts={availableDesserts} 
+      />
 
-      <PaymentRequestFields formData={formData} onFormChange={handleFormUpdate} />
-
-      <div className="space-y-1">
-        <Label className="text-sm text-pink-700 flex items-center space-x-2">
-          <Checkbox
-            checked={formData.usePayItForward}
-            onCheckedChange={(checked) => handleFormUpdate({ usePayItForward: checked })}
-            disabled={parseFloat(formData.paidAmount) > payItForwardBalance}
-          />
-          <span>Use Pay It Forward Fund?</span>
-        </Label>
-        <p className="text-xs text-pink-600">
-          Available: £{payItForwardBalance.toFixed(2)}
-        </p>
-      </div>
+      {mode === "admin" && (
+        <PaymentRequestFields 
+          formData={formData} 
+          onFormChange={handleFormUpdate} 
+        />
+      )}
 
       <Button
         type="submit"
-        className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-medium py-3"
+        className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-medium py-3 text-lg"
       >
-        Submit Order
+        {mode === "public" ? "Place Order" : "Submit Order"}
       </Button>
     </form>
   );

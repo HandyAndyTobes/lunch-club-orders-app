@@ -1,12 +1,19 @@
 
 import React from "react";
-import OrderForm from "./OrderForm";
+import OrderForm from "./components/OrderForm";
 
 const PublicOrderPage = () => {
   return (
-    <div className="max-w-2xl mx-auto mt-12 px-4">
-      <h1 className="text-2xl font-bold mb-6 text-center">Order Your Lunch</h1>
-      <OrderForm currentWeek={new Date().toISOString().slice(0, 10)} mode="public" />
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-amber-50">
+      <div className="max-w-lg mx-auto px-4 py-8">
+        <div className="bg-white rounded-lg shadow-lg p-6 border border-green-100">
+          <div className="text-center mb-6">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Order Your Lunch</h1>
+            <p className="text-gray-600">Place your order for today's lunch service</p>
+          </div>
+          <OrderForm currentWeek={new Date().toISOString().slice(0, 10)} mode="public" />
+        </div>
+      </div>
     </div>
   );
 };

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -12,14 +11,11 @@ import AdminControls from "@/components/AdminControls";
 import MenuManager from "@/components/MenuManager";
 import PayItForwardManager from "@/components/PayItForwardManager";
 import PayItForwardBalance from "@/components/PayItForwardBalance";
+import { getCurrentWeek, formatWeekDisplay } from "@/utils/weekUtils";
 
 const Index = () => {
   const [userRole, setUserRole] = useState<"volunteer" | "admin">("volunteer");
-  const [currentWeek] = useState(() => {
-    const today = new Date();
-    const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay()));
-    return startOfWeek.toISOString().split('T')[0];
-  });
+  const [currentWeek] = useState(() => getCurrentWeek());
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-amber-50">
@@ -33,7 +29,7 @@ const Index = () => {
               </div>
               <div>
                 <h1 className="text-xl font-bold text-gray-900">Church Lunch Club</h1>
-                <p className="text-sm text-gray-600">Week of {new Date(currentWeek).toLocaleDateString()}</p>
+                <p className="text-sm text-gray-600">Week of {formatWeekDisplay(currentWeek)}</p>
               </div>
             </div>
             <div className="flex items-center space-x-2">

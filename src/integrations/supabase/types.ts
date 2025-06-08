@@ -9,6 +9,108 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      dessert_inventory: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+          remaining_stock: number
+          starting_stock: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name: string
+          remaining_stock?: number
+          starting_stock?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          remaining_stock?: number
+          starting_stock?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      meal_options: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+          sort_order: number | null
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name: string
+          sort_order?: number | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          sort_order?: number | null
+        }
+        Relationships: []
+      }
+      orders: {
+        Row: {
+          created_at: string
+          customer_name: string
+          dessert: string | null
+          drink: string | null
+          id: string
+          meal_choice: string
+          paid_amount: number | null
+          pay_it_forward_amount: number | null
+          special_request: string | null
+          sub_items: string[] | null
+          table_number: string | null
+          timestamp: string
+          week: string
+        }
+        Insert: {
+          created_at?: string
+          customer_name: string
+          dessert?: string | null
+          drink?: string | null
+          id?: string
+          meal_choice: string
+          paid_amount?: number | null
+          pay_it_forward_amount?: number | null
+          special_request?: string | null
+          sub_items?: string[] | null
+          table_number?: string | null
+          timestamp?: string
+          week: string
+        }
+        Update: {
+          created_at?: string
+          customer_name?: string
+          dessert?: string | null
+          drink?: string | null
+          id?: string
+          meal_choice?: string
+          paid_amount?: number | null
+          pay_it_forward_amount?: number | null
+          special_request?: string | null
+          sub_items?: string[] | null
+          table_number?: string | null
+          timestamp?: string
+          week?: string
+        }
+        Relationships: []
+      }
       pay_it_forward_donations: {
         Row: {
           amount: number
@@ -57,6 +159,30 @@ export type Database = {
           notes?: string | null
           order_id?: string | null
           recipient_name?: string
+        }
+        Relationships: []
+      }
+      sub_item_options: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+          sort_order: number | null
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name: string
+          sort_order?: number | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          sort_order?: number | null
         }
         Relationships: []
       }

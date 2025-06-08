@@ -65,7 +65,7 @@ const OrdersList = ({ currentWeek }: OrdersListProps) => {
         <Card className="p-4 bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200">
           <div className="text-center">
             <div className="text-2xl font-bold text-amber-700">£{totalRevenue.toFixed(2)}</div>
-            <div className="text-sm text-amber-600">Total Revenue</div>
+            <div className="text-sm text-amber-600">Total Income</div>
           </div>
         </Card>
         <Card className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">

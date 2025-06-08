@@ -28,7 +28,7 @@ const Index = () => {
                 <Users className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Church Lunch Club</h1>
+                <h1 className="text-xl font-bold text-gray-900">DMT Lunch Club App</h1>
                 <p className="text-sm text-gray-600">Week of {formatWeekDisplay(currentWeek)}</p>
               </div>
             </div>

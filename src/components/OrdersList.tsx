@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Search, Filter } from "lucide-react";
+import EditOrderForm from "./EditOrderForm";
 import { useOrders, Order } from "@/hooks/useSupabaseData";
 import { toast } from "@/hooks/use-toast";
 
@@ -21,6 +22,8 @@ const OrdersList = ({ currentWeek }: OrdersListProps) => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [paidAmount, setPaidAmount] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [orderToEdit, setOrderToEdit] = useState<Order | null>(null);
 
   const currentWeekOrders = orders.filter(order => order.week === currentWeek);
   
@@ -174,8 +177,19 @@ const OrdersList = ({ currentWeek }: OrdersListProps) => {
                   )}
                 </div>
                 
-                <div className="text-xs text-gray-500 md:text-right">
-                  {new Date(order.created_at).toLocaleString()}
+                <div className="text-xs text-gray-500 md:text-right space-y-1">
+                  <div>{new Date(order.created_at).toLocaleString()}</div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOrderToEdit(order);
+                      setEditDialogOpen(true);
+                    }}
+                  >
+                    Edit
+                  </Button>
                 </div>
               </div>
             </Card>
@@ -219,6 +233,22 @@ const OrdersList = ({ currentWeek }: OrdersListProps) => {
               Save
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Order</DialogTitle>
+          </DialogHeader>
+          {orderToEdit && (
+            <EditOrderForm
+              order={orderToEdit}
+              onClose={() => {
+                setEditDialogOpen(false);
+                setOrderToEdit(null);
+              }}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>

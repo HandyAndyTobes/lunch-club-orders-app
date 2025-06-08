@@ -122,7 +122,7 @@ const AttendanceSummary = ({ currentWeek }: AttendanceSummaryProps) => {
             <PoundSterling className="w-6 h-6 text-amber-600" />
             <div>
               <div className="text-2xl font-bold text-amber-700">£{totalRevenue.toFixed(2)}</div>
-              <div className="text-sm text-amber-600">Total Revenue</div>
+              <div className="text-sm text-amber-600">Total Income</div>
             </div>
           </div>
         </Card>

@@ -89,7 +89,7 @@ const Index = () => {
               </TabsTrigger>
               <TabsTrigger value="pay-it-forward" className="flex items-center space-x-2">
                 <Heart className="w-4 h-4" />
-                <span className="hidden sm:inline">Pay Forward</span>
+                <span className="hidden sm:inline">Pay It Forward</span>
               </TabsTrigger>
               <TabsTrigger value="admin" className="flex items-center space-x-2">
                 <Settings className="w-4 h-4" />

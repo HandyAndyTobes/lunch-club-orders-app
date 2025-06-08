@@ -4,32 +4,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { X, Plus } from "lucide-react";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useMealOptions, useSubItemOptions } from "@/hooks/useSupabaseData";
 import { toast } from "@/hooks/use-toast";
 
 const MenuManager = () => {
-  const [mealOptions, setMealOptions] = useLocalStorage<string[]>("mealOptions", [
-    "Soup of the Day",
-    "Ham & Cheese Panini", 
-    "Roast Dinner",
-    "Fish & Chips",
-    "Jacket Potato",
-    "Chicken Salad"
-  ]);
-  
-  const [subItemOptions, setSubItemOptions] = useLocalStorage<string[]>("subItemOptions", [
-    "Buttered Bread",
-    "Side Salad", 
-    "Chips",
-    "Coleslaw",
-    "Garlic Bread",
-    "Extra Vegetables"
-  ]);
+  const { mealOptions, addMealOption, deleteMealOption, loading: mealLoading } = useMealOptions();
+  const { subItemOptions, addSubItemOption, deleteSubItemOption, loading: subItemLoading } = useSubItemOptions();
 
   const [newMeal, setNewMeal] = useState("");
   const [newSubItem, setNewSubItem] = useState("");
 
-  const handleAddMeal = () => {
+  const handleAddMeal = async () => {
     if (!newMeal.trim()) {
       toast({
         title: "Error",
@@ -39,7 +24,7 @@ const MenuManager = () => {
       return;
     }
 
-    if (mealOptions.includes(newMeal.trim())) {
+    if (mealOptions.some(meal => meal.name === newMeal.trim())) {
       toast({
         title: "Error",
         description: "This meal already exists",
@@ -48,23 +33,31 @@ const MenuManager = () => {
       return;
     }
 
-    setMealOptions([...mealOptions, newMeal.trim()]);
-    setNewMeal("");
-    toast({
-      title: "Success",
-      description: "Meal added successfully"
-    });
+    try {
+      await addMealOption(newMeal.trim());
+      setNewMeal("");
+      toast({
+        title: "Success",
+        description: "Meal added successfully"
+      });
+    } catch (error) {
+      // Error handling is done in the hook
+    }
   };
 
-  const handleRemoveMeal = (meal: string) => {
-    setMealOptions(mealOptions.filter(m => m !== meal));
-    toast({
-      title: "Success",
-      description: "Meal removed successfully"
-    });
+  const handleRemoveMeal = async (id: string, name: string) => {
+    try {
+      await deleteMealOption(id);
+      toast({
+        title: "Success",
+        description: "Meal removed successfully"
+      });
+    } catch (error) {
+      // Error handling is done in the hook
+    }
   };
 
-  const handleAddSubItem = () => {
+  const handleAddSubItem = async () => {
     if (!newSubItem.trim()) {
       toast({
         title: "Error",
@@ -74,7 +67,7 @@ const MenuManager = () => {
       return;
     }
 
-    if (subItemOptions.includes(newSubItem.trim())) {
+    if (subItemOptions.some(item => item.name === newSubItem.trim())) {
       toast({
         title: "Error",
         description: "This extra item already exists",
@@ -83,21 +76,40 @@ const MenuManager = () => {
       return;
     }
 
-    setSubItemOptions([...subItemOptions, newSubItem.trim()]);
-    setNewSubItem("");
-    toast({
-      title: "Success",
-      description: "Extra item added successfully"
-    });
+    try {
+      await addSubItemOption(newSubItem.trim());
+      setNewSubItem("");
+      toast({
+        title: "Success",
+        description: "Extra item added successfully"
+      });
+    } catch (error) {
+      // Error handling is done in the hook
+    }
   };
 
-  const handleRemoveSubItem = (subItem: string) => {
-    setSubItemOptions(subItemOptions.filter(s => s !== subItem));
-    toast({
-      title: "Success",
-      description: "Extra item removed successfully"
-    });
+  const handleRemoveSubItem = async (id: string, name: string) => {
+    try {
+      await deleteSubItemOption(id);
+      toast({
+        title: "Success",
+        description: "Extra item removed successfully"
+      });
+    } catch (error) {
+      // Error handling is done in the hook
+    }
   };
+
+  if (mealLoading || subItemLoading) {
+    return (
+      <div className="space-y-6">
+        <h2 className="text-2xl font-bold text-gray-900">Menu Manager</h2>
+        <Card className="p-8 text-center">
+          <div className="text-gray-500">Loading menu options...</div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -128,13 +140,13 @@ const MenuManager = () => {
           </div>
           
           <div className="space-y-2 max-h-96 overflow-y-auto">
-            {mealOptions.map((meal, index) => (
-              <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                <span className="font-medium">{meal}</span>
+            {mealOptions.map((meal) => (
+              <div key={meal.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                <span className="font-medium">{meal.name}</span>
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => handleRemoveMeal(meal)}
+                  onClick={() => handleRemoveMeal(meal.id, meal.name)}
                   className="text-red-500 hover:text-red-700 hover:bg-red-50"
                 >
                   <X className="w-4 h-4" />
@@ -171,13 +183,13 @@ const MenuManager = () => {
           </div>
           
           <div className="space-y-2 max-h-96 overflow-y-auto">
-            {subItemOptions.map((subItem, index) => (
-              <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                <span className="font-medium">{subItem}</span>
+            {subItemOptions.map((subItem) => (
+              <div key={subItem.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                <span className="font-medium">{subItem.name}</span>
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => handleRemoveSubItem(subItem)}
+                  onClick={() => handleRemoveSubItem(subItem.id, subItem.name)}
                   className="text-red-500 hover:text-red-700 hover:bg-red-50"
                 >
                   <X className="w-4 h-4" />

@@ -1,31 +1,38 @@
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DessertItem, OrderFormData } from "@/utils/orderUtils";
+import { OrderFormData } from "@/utils/orderUtils";
 
 interface DessertDrinkFieldsProps {
   formData: OrderFormData;
   onFormChange: (update: Partial<OrderFormData>) => void;
-  availableDesserts: DessertItem[];
+  availableDesserts: Array<{ name: string; remaining_stock: number }>;
 }
 
 const DessertDrinkFields = ({ formData, onFormChange, availableDesserts }: DessertDrinkFieldsProps) => {
+  const handleDessertChange = (value: string) => {
+    // Convert "none" back to empty string for the form data
+    const dessertValue = value === "none" ? "" : value;
+    onFormChange({ dessert: dessertValue });
+  };
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div className="space-y-2">
-        <Label htmlFor="dessert">Dessert</Label>
+        <Label htmlFor="dessert">Dessert (Optional)</Label>
         <Select 
-          value={formData.dessert} 
-          onValueChange={(value) => onFormChange({ dessert: value })}
+          value={formData.dessert || "none"} 
+          onValueChange={handleDessertChange}
         >
           <SelectTrigger className="border-green-200 focus:border-green-400">
-            <SelectValue placeholder="Select dessert" />
+            <SelectValue placeholder="Select a dessert" />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="none">No dessert</SelectItem>
             {availableDesserts.map(dessert => (
               <SelectItem key={dessert.name} value={dessert.name}>
-                {dessert.name} ({dessert.remainingStock} left)
+                {dessert.name} ({dessert.remaining_stock} left)
               </SelectItem>
             ))}
           </SelectContent>
@@ -33,12 +40,12 @@ const DessertDrinkFields = ({ formData, onFormChange, availableDesserts }: Desse
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="drink">Drink</Label>
+        <Label htmlFor="drink">Drink (Optional)</Label>
         <Input
           id="drink"
           value={formData.drink}
           onChange={(e) => onFormChange({ drink: e.target.value })}
-          placeholder="Tea, Coffee, Juice..."
+          placeholder="e.g., Tea, Coffee, Water"
           className="border-green-200 focus:border-green-400"
         />
       </div>

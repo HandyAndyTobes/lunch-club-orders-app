@@ -2,21 +2,6 @@
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
-export interface Order {
-  customerName: string;
-  mealChoice: string;
-  subItems: string[];
-  dessert: string;
-  drink: string;
-  specialRequest: string;
-  tableNumber: string;
-  paidAmount: string;
-  payItForwardAmount?: string;
-  week: string;
-  timestamp: string;
-  id: string;
-}
-
 export interface OrderFormData {
   customerName: string;
   mealChoice: string;
@@ -29,19 +14,19 @@ export interface OrderFormData {
   payItForwardAmount?: string;
 }
 
-export interface DessertItem {
-  name: string;
-  startingStock: number;
-  remainingStock: number;
-  active: boolean;
-}
-
-export const createNewOrder = (formData: OrderFormData, currentWeek: string): Order => {
+export const createNewOrder = (formData: OrderFormData, currentWeek: string) => {
   return {
-    ...formData,
+    customer_name: formData.customerName,
+    meal_choice: formData.mealChoice,
+    sub_items: formData.subItems,
+    dessert: formData.dessert || null,
+    drink: formData.drink || null,
+    special_request: formData.specialRequest || null,
+    table_number: formData.tableNumber || null,
+    paid_amount: formData.paidAmount ? parseFloat(formData.paidAmount) : null,
+    pay_it_forward_amount: formData.payItForwardAmount ? parseFloat(formData.payItForwardAmount) : null,
     week: currentWeek,
-    timestamp: new Date().toISOString(),
-    id: Date.now().toString()
+    timestamp: new Date().toISOString()
   };
 };
 
@@ -59,12 +44,12 @@ export const validateOrderForm = (formData: OrderFormData): boolean => {
 
 export const checkDessertStock = (
   dessert: string, 
-  dessertInventory: DessertItem[]
+  availableDesserts: Array<{ name: string; remaining_stock: number }>
 ): boolean => {
   if (!dessert) return true;
   
-  const dessertItem = dessertInventory.find(d => d.name === dessert);
-  if (!dessertItem || dessertItem.remainingStock <= 0) {
+  const dessertItem = availableDesserts.find(d => d.name === dessert);
+  if (!dessertItem || dessertItem.remaining_stock <= 0) {
     toast({
       title: "Dessert Unavailable",
       description: "Sorry, this dessert is out of stock.",
@@ -73,19 +58,6 @@ export const checkDessertStock = (
     return false;
   }
   return true;
-};
-
-export const updateDessertInventory = (
-  dessert: string, 
-  dessertInventory: DessertItem[]
-): DessertItem[] => {
-  if (!dessert) return dessertInventory;
-  
-  return dessertInventory.map(d =>
-    d.name === dessert
-      ? { ...d, remainingStock: d.remainingStock - 1 }
-      : d
-  );
 };
 
 export const recordPayItForwardUsage = async (

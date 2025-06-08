@@ -1,6 +1,7 @@
 
 import React from "react";
 import OrderForm from "./components/OrderForm";
+import { getCurrentWeek } from "./utils/weekUtils";
 
 const PublicOrderPage = () => {
   return (
@@ -11,7 +12,7 @@ const PublicOrderPage = () => {
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Order Your Lunch</h1>
             <p className="text-gray-600">Place your order for today's lunch service</p>
           </div>
-          <OrderForm currentWeek={new Date().toISOString().slice(0, 10)} mode="public" />
+          <OrderForm currentWeek={getCurrentWeek()} mode="public" />
         </div>
       </div>
     </div>

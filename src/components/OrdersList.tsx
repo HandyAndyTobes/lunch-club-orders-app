@@ -5,29 +5,45 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Search, Filter } from "lucide-react";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useOrders } from "@/hooks/useSupabaseData";
 
 interface OrdersListProps {
   currentWeek: string;
 }
 
 const OrdersList = ({ currentWeek }: OrdersListProps) => {
-  const [orders] = useLocalStorage<any[]>("orders", []);
+  const { orders, loading } = useOrders();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterTable, setFilterTable] = useState("all");
 
   const currentWeekOrders = orders.filter(order => order.week === currentWeek);
   
   const filteredOrders = currentWeekOrders.filter(order => {
-    const matchesSearch = order.customerName.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesTable = filterTable === "all" || order.tableNumber === filterTable;
+    const matchesSearch = order.customer_name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesTable = filterTable === "all" || order.table_number === filterTable;
     return matchesSearch && matchesTable;
   });
 
-  const totalRevenue = currentWeekOrders.reduce((sum, order) => sum + (parseFloat(order.paidAmount) || 0), 0);
+  const totalRevenue = currentWeekOrders.reduce((sum, order) => sum + (order.paid_amount || 0), 0);
   const totalOrders = currentWeekOrders.length;
 
-  const uniqueTables = [...new Set(currentWeekOrders.map(order => order.tableNumber).filter(Boolean))].sort();
+  const uniqueTables = [...new Set(currentWeekOrders.map(order => order.table_number).filter(Boolean))].sort();
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center space-x-3 mb-6">
+          <div className="w-6 h-6 bg-green-600 rounded flex items-center justify-center">
+            <Search className="w-4 h-4 text-white" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900">Orders This Week</h2>
+        </div>
+        <Card className="p-8 text-center">
+          <div className="text-gray-500">Loading orders...</div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -79,7 +95,7 @@ const OrdersList = ({ currentWeek }: OrdersListProps) => {
           <SelectContent>
             <SelectItem value="all">All Tables</SelectItem>
             {uniqueTables.map(table => (
-              <SelectItem key={table} value={table}>Table {table}</SelectItem>
+              <SelectItem key={table} value={table!}>Table {table}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -102,22 +118,22 @@ const OrdersList = ({ currentWeek }: OrdersListProps) => {
               <div className="flex flex-col md:flex-row md:items-center justify-between space-y-3 md:space-y-0">
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 mb-2">
-                    <h3 className="font-semibold text-lg text-gray-900">{order.customerName}</h3>
-                    {order.tableNumber && (
+                    <h3 className="font-semibold text-lg text-gray-900">{order.customer_name}</h3>
+                    {order.table_number && (
                       <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                        Table {order.tableNumber}
+                        Table {order.table_number}
                       </Badge>
                     )}
-                    {order.paidAmount && (
+                    {order.paid_amount && (
                       <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
-                        £{parseFloat(order.paidAmount).toFixed(2)}
+                        £{order.paid_amount.toFixed(2)}
                       </Badge>
                     )}
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                     <div>
-                      <span className="font-medium text-gray-700">Meal:</span> {order.mealChoice}
+                      <span className="font-medium text-gray-700">Meal:</span> {order.meal_choice}
                     </div>
                     {order.dessert && (
                       <div>
@@ -129,23 +145,23 @@ const OrdersList = ({ currentWeek }: OrdersListProps) => {
                         <span className="font-medium text-gray-700">Drink:</span> {order.drink}
                       </div>
                     )}
-                    {order.subItems.length > 0 && (
+                    {order.sub_items.length > 0 && (
                       <div>
-                        <span className="font-medium text-gray-700">Extras:</span> {order.subItems.join(", ")}
+                        <span className="font-medium text-gray-700">Extras:</span> {order.sub_items.join(", ")}
                       </div>
                     )}
                   </div>
                   
-                  {order.specialRequest && (
+                  {order.special_request && (
                     <div className="mt-2 p-2 bg-yellow-50 rounded border border-yellow-200">
                       <span className="font-medium text-yellow-800">Special Request:</span>
-                      <span className="text-yellow-700 ml-1">{order.specialRequest}</span>
+                      <span className="text-yellow-700 ml-1">{order.special_request}</span>
                     </div>
                   )}
                 </div>
                 
                 <div className="text-xs text-gray-500 md:text-right">
-                  {new Date(order.timestamp).toLocaleString()}
+                  {new Date(order.created_at).toLocaleString()}
                 </div>
               </div>
             </Card>

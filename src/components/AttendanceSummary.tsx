@@ -4,23 +4,13 @@ import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Users, PoundSterling, TrendingUp } from "lucide-react";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
-
-interface Order {
-  customerName: string;
-  mealChoice: string;
-  week: string;
-  paidAmount: string;
-  tableNumber?: string;
-  timestamp: string;
-  id: string;
-}
+import { useOrders, Order } from "@/hooks/useSupabaseData";
 
 interface CustomerSummary {
   name: string;
   orders: Order[];
   totalSpent: number;
-  tableNumber?: string;
+  tableNumber?: string | null;
 }
 
 interface AttendanceSummaryProps {
@@ -28,7 +18,7 @@ interface AttendanceSummaryProps {
 }
 
 const AttendanceSummary = ({ currentWeek }: AttendanceSummaryProps) => {
-  const [orders] = useLocalStorage<Order[]>("orders", []);
+  const { orders, loading } = useOrders();
   const [selectedWeek, setSelectedWeek] = useState(currentWeek);
 
   // Get all unique weeks from orders
@@ -39,27 +29,27 @@ const AttendanceSummary = ({ currentWeek }: AttendanceSummaryProps) => {
   
   // Calculate summary data
   const totalAttendees = weekOrders.length;
-  const uniqueCustomers = [...new Set(weekOrders.map(order => order.customerName))].length;
+  const uniqueCustomers = [...new Set(weekOrders.map(order => order.customer_name))].length;
   const totalRevenue = weekOrders.reduce((sum, order) => {
-    const amount = parseFloat(order.paidAmount);
-    return sum + (isNaN(amount) ? 0 : amount);
+    const amount = order.paid_amount ?? 0;
+    return sum + amount;
   }, 0);
   const averageSpend = totalAttendees > 0 ? totalRevenue / totalAttendees : 0;
 
   // Group orders by customer for detailed view
   const customerSummary = weekOrders.reduce((acc, order) => {
-    const name = order.customerName;
+    const name = order.customer_name;
     if (!acc[name]) {
       acc[name] = {
         name,
         orders: [],
         totalSpent: 0,
-        tableNumber: order.tableNumber
+        tableNumber: order.table_number
       };
     }
     acc[name].orders.push(order);
-    const amount = parseFloat(order.paidAmount);
-    acc[name].totalSpent += isNaN(amount) ? 0 : amount;
+    const amount = order.paid_amount ?? 0;
+    acc[name].totalSpent += amount;
     return acc;
   }, {} as Record<string, CustomerSummary>);
 
@@ -67,13 +57,19 @@ const AttendanceSummary = ({ currentWeek }: AttendanceSummaryProps) => {
 
   // Meal popularity analysis
   const mealCounts = weekOrders.reduce((acc, order) => {
-    acc[order.mealChoice] = (acc[order.mealChoice] || 0) + 1;
+    acc[order.meal_choice] = (acc[order.meal_choice] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
   const popularMeals = Object.entries(mealCounts)
     .sort(([,a], [,b]) => b - a)
     .slice(0, 3);
+
+  if (loading) {
+    return (
+      <div className="p-8 text-center text-gray-500">Loading attendance...</div>
+    );
+  }
 
   return (
     <div className="space-y-6">

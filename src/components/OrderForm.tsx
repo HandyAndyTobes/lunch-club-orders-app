@@ -8,6 +8,7 @@ import MealSelectionField from "./order/MealSelectionField";
 import SubItemsField from "./order/SubItemsField";
 import DessertDrinkFields from "./order/DessertDrinkFields";
 import PaymentRequestFields from "./order/PaymentRequestFields";
+import PayItForwardField from "./order/PayItForwardField";
 import {
   OrderFormData,
   createNewOrder,
@@ -129,6 +130,11 @@ const OrderForm = ({ currentWeek, mode = "admin" }: OrderFormProps) => {
         formData={formData} 
         onFormChange={handleFormUpdate} 
         availableDesserts={availableDesserts} 
+      />
+
+      <PayItForwardField 
+        formData={formData} 
+        onFormChange={handleFormUpdate} 
       />
 
       {mode === "admin" && (

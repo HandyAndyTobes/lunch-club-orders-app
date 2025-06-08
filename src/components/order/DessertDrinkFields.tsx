@@ -11,19 +11,25 @@ interface DessertDrinkFieldsProps {
 }
 
 const DessertDrinkFields = ({ formData, onFormChange, availableDesserts }: DessertDrinkFieldsProps) => {
+  const handleDessertChange = (value: string) => {
+    // Convert "none" back to empty string for the form data
+    const dessertValue = value === "none" ? "" : value;
+    onFormChange({ dessert: dessertValue });
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div className="space-y-2">
         <Label htmlFor="dessert">Dessert (Optional)</Label>
         <Select 
-          value={formData.dessert} 
-          onValueChange={(value) => onFormChange({ dessert: value })}
+          value={formData.dessert || "none"} 
+          onValueChange={handleDessertChange}
         >
           <SelectTrigger className="border-green-200 focus:border-green-400">
             <SelectValue placeholder="Select a dessert" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">No dessert</SelectItem>
+            <SelectItem value="none">No dessert</SelectItem>
             {availableDesserts.map(dessert => (
               <SelectItem key={dessert.name} value={dessert.name}>
                 {dessert.name} ({dessert.remaining_stock} left)

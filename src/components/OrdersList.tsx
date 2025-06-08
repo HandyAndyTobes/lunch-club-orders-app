@@ -4,17 +4,23 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Search, Filter } from "lucide-react";
-import { useOrders } from "@/hooks/useSupabaseData";
+import { useOrders, Order } from "@/hooks/useSupabaseData";
+import { toast } from "@/hooks/use-toast";
 
 interface OrdersListProps {
   currentWeek: string;
 }
 
 const OrdersList = ({ currentWeek }: OrdersListProps) => {
-  const { orders, loading } = useOrders();
+  const { orders, loading, updateOrder } = useOrders();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterTable, setFilterTable] = useState("all");
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [paidAmount, setPaidAmount] = useState("");
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const currentWeekOrders = orders.filter(order => order.week === currentWeek);
   
@@ -114,7 +120,15 @@ const OrdersList = ({ currentWeek }: OrdersListProps) => {
           </Card>
         ) : (
           filteredOrders.map((order) => (
-            <Card key={order.id} className="p-4 hover:shadow-md transition-shadow border-green-100">
+            <Card
+              key={order.id}
+              className="p-4 hover:shadow-md transition-shadow border-green-100 cursor-pointer"
+              onClick={() => {
+                setSelectedOrder(order);
+                setPaidAmount(order.paid_amount ? order.paid_amount.toString() : "");
+                setDialogOpen(true);
+              }}
+            >
               <div className="flex flex-col md:flex-row md:items-center justify-between space-y-3 md:space-y-0">
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 mb-2">
@@ -168,6 +182,45 @@ const OrdersList = ({ currentWeek }: OrdersListProps) => {
           ))
         )}
       </div>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Update Payment</DialogTitle>
+          </DialogHeader>
+          {selectedOrder && (
+            <div className="space-y-4">
+              <div className="font-medium">{selectedOrder.customer_name}</div>
+              <Input
+                type="number"
+                step="0.01"
+                value={paidAmount}
+                onChange={(e) => setPaidAmount(e.target.value)}
+                placeholder="Amount paid"
+              />
+            </div>
+          )}
+          <DialogFooter className="pt-4">
+            <Button
+              onClick={async () => {
+                if (selectedOrder) {
+                  await updateOrder(selectedOrder.id, {
+                    paid_amount: paidAmount ? parseFloat(paidAmount) : null,
+                  });
+                  toast({
+                    title: "Order Updated",
+                    description: `Payment details updated for ${selectedOrder.customer_name}.`,
+                  });
+                }
+                setDialogOpen(false);
+                setSelectedOrder(null);
+              }}
+            >
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

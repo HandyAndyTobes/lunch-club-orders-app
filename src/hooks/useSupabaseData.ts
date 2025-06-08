@@ -89,11 +89,32 @@ export const useOrders = () => {
     }
   };
 
+  const updateOrder = async (id: string, updates: Partial<Order>) => {
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update(updates)
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setOrders(prev => prev.map(o => o.id === id ? { ...o, ...updates } : o));
+    } catch (error) {
+      console.error('Error updating order:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update order.",
+        variant: "destructive"
+      });
+      throw error;
+    }
+  };
+
   useEffect(() => {
     fetchOrders();
   }, []);
 
-  return { orders, loading, addOrder, refetch: fetchOrders };
+  return { orders, loading, addOrder, updateOrder, refetch: fetchOrders };
 };
 
 export const useDessertInventory = () => {

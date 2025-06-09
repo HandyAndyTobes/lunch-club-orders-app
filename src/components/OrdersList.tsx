@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Search, Filter } from "lucide-react";
+import { Search, Filter, Printer } from "lucide-react";
+import { Link } from "react-router-dom";
 import EditOrderForm from "./EditOrderForm";
 import { useOrders, Order } from "@/hooks/useSupabaseData";
 import { toast } from "@/hooks/use-toast";
@@ -56,11 +57,19 @@ const OrdersList = ({ currentWeek }: OrdersListProps) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center space-x-3 mb-6">
-        <div className="w-6 h-6 bg-green-600 rounded flex items-center justify-center">
-          <Search className="w-4 h-4 text-white" />
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center space-x-3">
+          <div className="w-6 h-6 bg-green-600 rounded flex items-center justify-center">
+            <Search className="w-4 h-4 text-white" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900">Orders This Week</h2>
         </div>
-        <h2 className="text-2xl font-bold text-gray-900">Orders This Week</h2>
+        <Link to="/print-orders">
+          <Button size="sm" variant="outline" className="space-x-2">
+            <Printer className="w-4 h-4" />
+            <span>Print</span>
+          </Button>
+        </Link>
       </div>
 
       {/* Summary Cards */}

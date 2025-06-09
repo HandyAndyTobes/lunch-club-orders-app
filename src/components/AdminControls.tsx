@@ -6,32 +6,49 @@ import { Badge } from "@/components/ui/badge";
 import { Trash2, FileText, RotateCcw, Download, Settings } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { supabase } from "@/integrations/supabase/client";
+import { useOrders, useDessertInventory } from "@/hooks/useSupabaseData";
 
 interface AdminControlsProps {
   currentWeek: string;
 }
 
 const AdminControls = ({ currentWeek }: AdminControlsProps) => {
-  const [orders, setOrders] = useLocalStorage<any[]>("orders", []);
+  const { orders, refetch: refetchOrders } = useOrders();
+  const { desserts, updateDessert, refetch: refetchDesserts } = useDessertInventory();
   const [attendance, setAttendance] = useLocalStorage<any[]>("attendance", []);
-  const [dessertInventory, setDessertInventory] = useLocalStorage("dessertInventory", []);
 
   const currentWeekOrders = orders.filter(order => order.week === currentWeek);
-  const totalRevenue = currentWeekOrders.reduce((sum, order) => sum + (parseFloat(order.paidAmount) || 0), 0);
+  const totalRevenue = currentWeekOrders.reduce((sum, order) => sum + (order.paid_amount || 0), 0);
 
-  const clearWeekOrders = () => {
-    const remainingOrders = orders.filter(order => order.week !== currentWeek);
-    setOrders(remainingOrders);
-    
-    toast({
-      title: "Orders Cleared",
-      description: `All orders for the week of ${new Date(currentWeek).toLocaleDateString()} have been cleared.`,
-    });
+  const clearWeekOrders = async () => {
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .delete()
+        .eq('week', currentWeek);
+
+      if (error) throw error;
+
+      await refetchOrders();
+
+      toast({
+        title: "Orders Cleared",
+        description: `All orders for the week of ${new Date(currentWeek).toLocaleDateString()} have been cleared.`,
+      });
+    } catch (error) {
+      console.error('Error clearing orders:', error);
+      toast({
+        title: "Error",
+        description: "Failed to clear orders.",
+        variant: "destructive",
+      });
+    }
   };
 
   const generateAttendanceSheet = () => {
     const customerSummary = currentWeekOrders.reduce((acc, order) => {
-      const name = order.customerName;
+      const name = order.customer_name;
       if (!acc[name]) {
         acc[name] = {
           name,
@@ -39,7 +56,7 @@ const AdminControls = ({ currentWeek }: AdminControlsProps) => {
           orders: []
         };
       }
-      acc[name].totalSpent += parseFloat(order.paidAmount) || 0;
+      acc[name].totalSpent += order.paid_amount || 0;
       acc[name].orders.push(order);
       return acc;
     }, {} as Record<string, any>);
@@ -62,24 +79,35 @@ const AdminControls = ({ currentWeek }: AdminControlsProps) => {
     });
   };
 
-  const resetAllStock = () => {
-    const updated = dessertInventory.map(dessert => ({
-      ...dessert,
-      remainingStock: dessert.startingStock
-    }));
-    setDessertInventory(updated);
-    
-    toast({
-      title: "Stock Reset",
-      description: "All dessert stock has been reset for the new week.",
-    });
+  const resetAllStock = async () => {
+    try {
+      for (const dessert of desserts) {
+        await updateDessert(dessert.id, {
+          remaining_stock: dessert.starting_stock
+        });
+      }
+
+      await refetchDesserts();
+
+      toast({
+        title: "Stock Reset",
+        description: "All dessert stock has been reset for the new week.",
+      });
+    } catch (error) {
+      console.error('Error resetting stock:', error);
+      toast({
+        title: "Error",
+        description: "Failed to reset stock.",
+        variant: "destructive",
+      });
+    }
   };
 
   const exportData = () => {
     const exportData = {
       orders: currentWeekOrders,
       attendance: attendance.filter(record => record.week === currentWeek),
-      dessertInventory,
+      dessertInventory: desserts,
       exportDate: new Date().toISOString(),
       week: currentWeek
     };
@@ -99,20 +127,36 @@ const AdminControls = ({ currentWeek }: AdminControlsProps) => {
     });
   };
 
-  const clearAllData = () => {
-    setOrders([]);
-    setAttendance([]);
-    const resetInventory = dessertInventory.map(dessert => ({
-      ...dessert,
-      remainingStock: dessert.startingStock
-    }));
-    setDessertInventory(resetInventory);
-    
-    toast({
-      title: "All Data Cleared",
-      description: "All orders, attendance records have been cleared and stock reset.",
-      variant: "destructive"
-    });
+  const clearAllData = async () => {
+    try {
+      await supabase.from('orders').delete().neq('id', '');
+      await supabase.from('pay_it_forward_donations').delete().neq('id', '');
+      await supabase.from('pay_it_forward_usage').delete().neq('id', '');
+
+      for (const dessert of desserts) {
+        await updateDessert(dessert.id, {
+          remaining_stock: dessert.starting_stock
+        });
+      }
+
+      await refetchOrders();
+      await refetchDesserts();
+
+      setAttendance([]);
+
+      toast({
+        title: "All Data Cleared",
+        description: "All orders and Pay It Forward records have been removed and stock reset.",
+        variant: "destructive"
+      });
+    } catch (error) {
+      console.error('Error clearing all data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to clear all data.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -256,7 +300,7 @@ const AdminControls = ({ currentWeek }: AdminControlsProps) => {
           </div>
           <div className="flex items-center justify-between">
             <span>Active Desserts</span>
-            <Badge variant="outline">{dessertInventory.filter(d => d.active).length}</Badge>
+            <Badge variant="outline">{desserts.filter(d => d.active).length}</Badge>
           </div>
         </div>
       </Card>

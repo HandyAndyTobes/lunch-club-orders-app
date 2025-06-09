@@ -8,9 +8,10 @@ interface DessertDrinkFieldsProps {
   formData: OrderFormData;
   onFormChange: (update: Partial<OrderFormData>) => void;
   availableDesserts: Array<{ name: string; remaining_stock: number }>;
+  showDrink?: boolean;
 }
 
-const DessertDrinkFields = ({ formData, onFormChange, availableDesserts }: DessertDrinkFieldsProps) => {
+const DessertDrinkFields = ({ formData, onFormChange, availableDesserts, showDrink = true }: DessertDrinkFieldsProps) => {
   const handleDessertChange = (value: string) => {
     // Convert "none" back to empty string for the form data
     const dessertValue = value === "none" ? "" : value;
@@ -21,8 +22,8 @@ const DessertDrinkFields = ({ formData, onFormChange, availableDesserts }: Desse
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div className="space-y-2">
         <Label htmlFor="dessert">Dessert (Optional)</Label>
-        <Select 
-          value={formData.dessert || "none"} 
+        <Select
+          value={formData.dessert || "none"}
           onValueChange={handleDessertChange}
         >
           <SelectTrigger className="border-green-200 focus:border-green-400">
@@ -38,17 +39,18 @@ const DessertDrinkFields = ({ formData, onFormChange, availableDesserts }: Desse
           </SelectContent>
         </Select>
       </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="drink">Drink (Optional)</Label>
-        <Input
-          id="drink"
-          value={formData.drink}
-          onChange={(e) => onFormChange({ drink: e.target.value })}
-          placeholder="e.g., Tea, Coffee, Water"
-          className="border-green-200 focus:border-green-400"
-        />
-      </div>
+      {showDrink && (
+        <div className="space-y-2">
+          <Label htmlFor="drink">Drink (Optional)</Label>
+          <Input
+            id="drink"
+            value={formData.drink}
+            onChange={(e) => onFormChange({ drink: e.target.value })}
+            placeholder="e.g., Tea, Coffee, Water"
+            className="border-green-200 focus:border-green-400"
+          />
+        </div>
+      )}
     </div>
   );
 };

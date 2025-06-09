@@ -21,9 +21,10 @@ import {
 interface OrderFormProps {
   currentWeek: string;
   mode?: "admin" | "public";
+  onSuccess?: () => void;
 }
 
-const OrderForm = ({ currentWeek, mode = "admin" }: OrderFormProps) => {
+const OrderForm = ({ currentWeek, mode = "admin", onSuccess }: OrderFormProps) => {
   const { addOrder } = useOrders();
   const { desserts, updateDessert } = useDessertInventory();
   const { mealOptions } = useMealOptions();
@@ -90,6 +91,9 @@ const OrderForm = ({ currentWeek, mode = "admin" }: OrderFormProps) => {
       });
 
       setFormData(getInitialFormData());
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (error) {
       console.error('Error submitting order:', error);
       toast({

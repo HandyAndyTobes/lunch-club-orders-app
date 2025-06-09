@@ -16,7 +16,7 @@ interface EditOrderFormProps {
 }
 
 const EditOrderForm = ({ order, onClose, updateOrder }: EditOrderFormProps) => {
-  const { desserts } = useDessertInventory();
+  const { desserts, updateDessert } = useDessertInventory();
   const { mealOptions } = useMealOptions();
   const { subItemOptions } = useSubItemOptions();
 
@@ -50,6 +50,8 @@ const EditOrderForm = ({ order, onClose, updateOrder }: EditOrderFormProps) => {
     if (!validateOrderForm(formData)) return;
     setIsSubmitting(true);
     try {
+      const previousDessert = order.dessert || "";
+
       await updateOrder(order.id, {
         customer_name: formData.customerName,
         meal_choice: formData.mealChoice,
@@ -59,6 +61,24 @@ const EditOrderForm = ({ order, onClose, updateOrder }: EditOrderFormProps) => {
         special_request: formData.specialRequest || null,
         table_number: formData.tableNumber || null,
       });
+
+      if (previousDessert && previousDessert !== formData.dessert) {
+        const prevItem = desserts.find(d => d.name === previousDessert);
+        if (prevItem) {
+          await updateDessert(prevItem.id, {
+            remaining_stock: prevItem.remaining_stock + 1,
+          });
+        }
+      }
+
+      if (formData.dessert && formData.dessert !== previousDessert) {
+        const newItem = desserts.find(d => d.name === formData.dessert);
+        if (newItem) {
+          await updateDessert(newItem.id, {
+            remaining_stock: newItem.remaining_stock - 1,
+          });
+        }
+      }
       toast({
         title: "Order Updated",
         description: `Meal updated for ${formData.customerName}.`,

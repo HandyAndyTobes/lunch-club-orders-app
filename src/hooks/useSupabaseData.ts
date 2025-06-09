@@ -150,8 +150,11 @@ export const useDessertInventory = () => {
         .eq('id', id);
 
       if (error) throw error;
-      
+
       setDesserts(prev => prev.map(d => d.id === id ? { ...d, ...updates } : d));
+
+      // Trigger refetch so other hook instances stay in sync
+      fetchDesserts();
     } catch (error) {
       console.error('Error updating dessert:', error);
       toast({
@@ -209,6 +212,19 @@ export const useDessertInventory = () => {
 
   useEffect(() => {
     fetchDesserts();
+
+    const channel = supabase
+      .channel('dessert-inventory-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'dessert_inventory' },
+        fetchDesserts
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return { 

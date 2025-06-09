@@ -6,16 +6,16 @@ import SubItemsField from "@/components/order/SubItemsField";
 import DessertDrinkFields from "@/components/order/DessertDrinkFields";
 import SpecialRequestField from "@/components/order/SpecialRequestField";
 import { toast } from "@/hooks/use-toast";
-import { useOrders, useDessertInventory, useMealOptions, useSubItemOptions, Order } from "@/hooks/useSupabaseData";
+import { useDessertInventory, useMealOptions, useSubItemOptions, Order } from "@/hooks/useSupabaseData";
 import { OrderFormData, validateOrderForm } from "@/utils/orderUtils";
 
 interface EditOrderFormProps {
   order: Order;
   onClose: () => void;
+  updateOrder: (id: string, updates: Partial<Order>) => Promise<void>;
 }
 
-const EditOrderForm = ({ order, onClose }: EditOrderFormProps) => {
-  const { updateOrder } = useOrders();
+const EditOrderForm = ({ order, onClose, updateOrder }: EditOrderFormProps) => {
   const { desserts } = useDessertInventory();
   const { mealOptions } = useMealOptions();
   const { subItemOptions } = useSubItemOptions();

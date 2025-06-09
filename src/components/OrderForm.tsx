@@ -132,10 +132,12 @@ const OrderForm = ({ currentWeek, mode = "admin" }: OrderFormProps) => {
         availableDesserts={availableDesserts} 
       />
 
-      <PayItForwardField 
-        formData={formData} 
-        onFormChange={handleFormUpdate} 
-      />
+      {mode !== "public" && (
+        <PayItForwardField
+          formData={formData}
+          onFormChange={handleFormUpdate}
+        />
+      )}
 
       {mode === "admin" && (
         <PaymentRequestFields 

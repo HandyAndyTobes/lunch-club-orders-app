@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, ClipboardList, Package, Calendar, Settings, UtensilsCrossed, Heart } from "lucide-react";
@@ -10,7 +12,6 @@ import AdminControls from "@/components/AdminControls";
 import MenuManager from "@/components/MenuManager";
 import PayItForwardManager from "@/components/PayItForwardManager";
 import PayItForwardBalance from "@/components/PayItForwardBalance";
-import NavButtons from "@/components/NavButtons";
 import { getCurrentWeek, formatWeekDisplay } from "@/utils/weekUtils";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -21,7 +22,14 @@ interface Props {
 const Index = ({ initialRole = "volunteer" }: Props) => {
   const [userRole, setUserRole] = useState<"volunteer" | "admin">(initialRole);
   const [currentWeek] = useState(() => getCurrentWeek());
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    setUserRole("volunteer");
+    navigate("/");
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-amber-50">
@@ -38,7 +46,29 @@ const Index = ({ initialRole = "volunteer" }: Props) => {
                 <p className="text-sm text-gray-600">Week of {formatWeekDisplay(currentWeek)}</p>
               </div>
             </div>
-            <NavButtons active={userRole} onSignOut={() => setUserRole("volunteer")} />
+            <div className="flex items-center space-x-2">
+              <Button
+                variant={userRole === "volunteer" ? "default" : "outline"}
+                size="sm"
+                onClick={() => navigate("/")}
+                className="text-xs"
+              >
+                Volunteer
+              </Button>
+              <Button
+                variant={userRole === "admin" ? "default" : "outline"}
+                size="sm"
+                onClick={() => navigate("/admin")}
+                className="text-xs"
+              >
+                Admin
+              </Button>
+              {user && (
+                <Button variant="outline" size="sm" onClick={handleSignOut} className="text-xs">
+                  Sign Out
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </div>

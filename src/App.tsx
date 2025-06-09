@@ -1,7 +1,6 @@
 
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
-import Orders from "./pages/Orders";
 import PublicOrderPage from "./PublicOrderPage";
 import PrintOrders from "./pages/PrintOrders";
 import Login from "./pages/Login";
@@ -14,7 +13,6 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/orders" element={<Orders />} />
           <Route
             path="/admin"
             element={

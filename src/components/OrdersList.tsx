@@ -14,10 +14,9 @@ import { toast } from "@/hooks/use-toast";
 
 interface OrdersListProps {
   currentWeek: string;
-  readOnly?: boolean;
 }
 
-const OrdersList = ({ currentWeek, readOnly = false }: OrdersListProps) => {
+const OrdersList = ({ currentWeek }: OrdersListProps) => {
   const { orders, loading, updateOrder } = useOrders();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterTable, setFilterTable] = useState("all");
@@ -135,18 +134,12 @@ const OrdersList = ({ currentWeek, readOnly = false }: OrdersListProps) => {
           filteredOrders.map((order) => (
             <Card
               key={order.id}
-              className={
-                readOnly
-                  ? "p-4 border-green-100"
-                  : "p-4 hover:shadow-md transition-shadow border-green-100 cursor-pointer"
-              }
-              {...(!readOnly && {
-                onClick: () => {
-                  setSelectedOrder(order);
-                  setPaidAmount(order.paid_amount ? order.paid_amount.toString() : "");
-                  setDialogOpen(true);
-                },
-              })}
+              className="p-4 hover:shadow-md transition-shadow border-green-100 cursor-pointer"
+              onClick={() => {
+                setSelectedOrder(order);
+                setPaidAmount(order.paid_amount ? order.paid_amount.toString() : "");
+                setDialogOpen(true);
+              }}
             >
               <div className="flex flex-col md:flex-row md:items-center justify-between space-y-3 md:space-y-0">
                 <div className="flex-1">
@@ -195,19 +188,17 @@ const OrdersList = ({ currentWeek, readOnly = false }: OrdersListProps) => {
                 
                 <div className="text-xs text-gray-500 md:text-right space-y-1">
                   <div>{new Date(order.created_at).toLocaleString()}</div>
-                  {!readOnly && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setOrderToEdit(order);
-                        setEditDialogOpen(true);
-                      }}
-                    >
-                      Edit
-                    </Button>
-                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOrderToEdit(order);
+                      setEditDialogOpen(true);
+                    }}
+                  >
+                    Edit
+                  </Button>
                 </div>
               </div>
             </Card>
@@ -215,65 +206,61 @@ const OrdersList = ({ currentWeek, readOnly = false }: OrdersListProps) => {
         )}
       </div>
 
-      {!readOnly && (
-        <>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Update Payment</DialogTitle>
-              </DialogHeader>
-              {selectedOrder && (
-                <div className="space-y-4">
-                  <div className="font-medium">{selectedOrder.customer_name}</div>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={paidAmount}
-                    onChange={(e) => setPaidAmount(e.target.value)}
-                    placeholder="Amount paid"
-                  />
-                </div>
-              )}
-              <DialogFooter className="pt-4">
-                <Button
-                  onClick={async () => {
-                    if (selectedOrder) {
-                      await updateOrder(selectedOrder.id, {
-                        paid_amount: paidAmount ? parseFloat(paidAmount) : null,
-                      });
-                      toast({
-                        title: "Order Updated",
-                        description: `Payment details updated for ${selectedOrder.customer_name}.`,
-                      });
-                    }
-                    setDialogOpen(false);
-                    setSelectedOrder(null);
-                  }}
-                >
-                  Save
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-          <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-            <DialogContent className="max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Edit Order</DialogTitle>
-              </DialogHeader>
-              {orderToEdit && (
-                <EditOrderForm
-                  order={orderToEdit}
-                  updateOrder={updateOrder}
-                  onClose={() => {
-                    setEditDialogOpen(false);
-                    setOrderToEdit(null);
-                  }}
-                />
-              )}
-            </DialogContent>
-          </Dialog>
-        </>
-      )}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Update Payment</DialogTitle>
+          </DialogHeader>
+          {selectedOrder && (
+            <div className="space-y-4">
+              <div className="font-medium">{selectedOrder.customer_name}</div>
+              <Input
+                type="number"
+                step="0.01"
+                value={paidAmount}
+                onChange={(e) => setPaidAmount(e.target.value)}
+                placeholder="Amount paid"
+              />
+            </div>
+          )}
+          <DialogFooter className="pt-4">
+            <Button
+              onClick={async () => {
+                if (selectedOrder) {
+                  await updateOrder(selectedOrder.id, {
+                    paid_amount: paidAmount ? parseFloat(paidAmount) : null,
+                  });
+                  toast({
+                    title: "Order Updated",
+                    description: `Payment details updated for ${selectedOrder.customer_name}.`,
+                  });
+                }
+                setDialogOpen(false);
+                setSelectedOrder(null);
+              }}
+            >
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Order</DialogTitle>
+          </DialogHeader>
+          {orderToEdit && (
+            <EditOrderForm
+              order={orderToEdit}
+              updateOrder={updateOrder}
+              onClose={() => {
+                setEditDialogOpen(false);
+                setOrderToEdit(null);
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

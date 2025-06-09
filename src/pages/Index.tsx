@@ -50,7 +50,7 @@ const Index = ({ initialRole = "volunteer" }: Props) => {
               <Button
                 variant={userRole === "volunteer" ? "default" : "outline"}
                 size="sm"
-                onClick={() => setUserRole("volunteer")}
+                onClick={() => navigate("/")}
                 className="text-xs"
               >
                 Volunteer
@@ -58,7 +58,7 @@ const Index = ({ initialRole = "volunteer" }: Props) => {
               <Button
                 variant={userRole === "admin" ? "default" : "outline"}
                 size="sm"
-                onClick={() => setUserRole("admin")}
+                onClick={() => navigate("/admin")}
                 className="text-xs"
               >
                 Admin

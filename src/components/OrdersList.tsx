@@ -252,6 +252,7 @@ const OrdersList = ({ currentWeek }: OrdersListProps) => {
           {orderToEdit && (
             <EditOrderForm
               order={orderToEdit}
+              updateOrder={updateOrder}
               onClose={() => {
                 setEditDialogOpen(false);
                 setOrderToEdit(null);

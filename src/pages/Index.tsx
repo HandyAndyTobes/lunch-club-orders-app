@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,10 +13,23 @@ import MenuManager from "@/components/MenuManager";
 import PayItForwardManager from "@/components/PayItForwardManager";
 import PayItForwardBalance from "@/components/PayItForwardBalance";
 import { getCurrentWeek, formatWeekDisplay } from "@/utils/weekUtils";
+import { useAuth } from "@/hooks/useAuth";
 
-const Index = () => {
-  const [userRole, setUserRole] = useState<"volunteer" | "admin">("volunteer");
+interface Props {
+  initialRole?: "volunteer" | "admin";
+}
+
+const Index = ({ initialRole = "volunteer" }: Props) => {
+  const [userRole, setUserRole] = useState<"volunteer" | "admin">(initialRole);
   const [currentWeek] = useState(() => getCurrentWeek());
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    setUserRole("volunteer");
+    navigate("/");
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-amber-50">
@@ -49,6 +63,11 @@ const Index = () => {
               >
                 Admin
               </Button>
+              {user && (
+                <Button variant="outline" size="sm" onClick={handleSignOut} className="text-xs">
+                  Sign Out
+                </Button>
+              )}
             </div>
           </div>
         </div>

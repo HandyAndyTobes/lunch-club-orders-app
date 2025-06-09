@@ -7,7 +7,7 @@ import DessertDrinkFields from "@/components/order/DessertDrinkFields";
 import SpecialRequestField from "@/components/order/SpecialRequestField";
 import { toast } from "@/hooks/use-toast";
 import { useOrders, useDessertInventory, useMealOptions, useSubItemOptions, Order } from "@/hooks/useSupabaseData";
-import { OrderFormData, getInitialFormData, validateOrderForm } from "@/utils/orderUtils";
+import { OrderFormData, validateOrderForm } from "@/utils/orderUtils";
 
 interface EditOrderFormProps {
   order: Order;
@@ -20,21 +20,25 @@ const EditOrderForm = ({ order, onClose }: EditOrderFormProps) => {
   const { mealOptions } = useMealOptions();
   const { subItemOptions } = useSubItemOptions();
 
-  const [formData, setFormData] = useState<OrderFormData>(getInitialFormData());
+  const getFormDataFromOrder = (order: Order): OrderFormData => ({
+    customerName: order.customer_name,
+    mealChoice: order.meal_choice,
+    subItems: order.sub_items,
+    dessert: order.dessert || "",
+    drink: order.drink || "",
+    specialRequest: order.special_request || "",
+    tableNumber: order.table_number || "",
+    paidAmount: order.paid_amount ? order.paid_amount.toString() : "",
+    payItForwardAmount: order.pay_it_forward_amount
+      ? order.pay_it_forward_amount.toString()
+      : "",
+  });
+
+  const [formData, setFormData] = useState<OrderFormData>(() => getFormDataFromOrder(order));
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    setFormData({
-      customerName: order.customer_name,
-      mealChoice: order.meal_choice,
-      subItems: order.sub_items,
-      dessert: order.dessert || "",
-      drink: order.drink || "",
-      specialRequest: order.special_request || "",
-      tableNumber: order.table_number || "",
-      paidAmount: order.paid_amount ? order.paid_amount.toString() : "",
-      payItForwardAmount: order.pay_it_forward_amount ? order.pay_it_forward_amount.toString() : "",
-    });
+    setFormData(getFormDataFromOrder(order));
   }, [order]);
 
   const handleFormUpdate = (update: Partial<OrderFormData>) => {

@@ -130,10 +130,11 @@ const OrderForm = ({ currentWeek, mode = "admin", onSuccess }: OrderFormProps) =
         subItemOptions={activeSubItemOptions} 
       />
 
-      <DessertDrinkFields 
-        formData={formData} 
-        onFormChange={handleFormUpdate} 
-        availableDesserts={availableDesserts} 
+      <DessertDrinkFields
+        formData={formData}
+        onFormChange={handleFormUpdate}
+        availableDesserts={availableDesserts}
+        showDrink={mode !== "public"}
       />
 
       {mode !== "public" && (

@@ -74,7 +74,7 @@ const OrdersList = ({ currentWeek, readOnly = false }: OrdersListProps) => {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <Card className="p-4 bg-gradient-to-br from-green-50 to-green-100 border-green-200">
           <div className="text-center">
             <div className="text-2xl font-bold text-green-700">{totalOrders}</div>
@@ -85,12 +85,6 @@ const OrdersList = ({ currentWeek, readOnly = false }: OrdersListProps) => {
           <div className="text-center">
             <div className="text-2xl font-bold text-amber-700">£{totalRevenue.toFixed(2)}</div>
             <div className="text-sm text-amber-600">Total Income</div>
-          </div>
-        </Card>
-        <Card className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-blue-700">{uniqueTables.length}</div>
-            <div className="text-sm text-blue-600">Tables Used</div>
           </div>
         </Card>
       </div>

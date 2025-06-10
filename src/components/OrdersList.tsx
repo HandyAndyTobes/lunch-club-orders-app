@@ -208,21 +208,6 @@ const OrdersList = ({ currentWeek, readOnly = false }: OrdersListProps) => {
                       Edit
                     </Button>
                   )}
-                  {readOnly && !order.paid_amount && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={async () => {
-                        await updateOrder(order.id, { paid_amount: 0 });
-                        toast({
-                          title: "Order Updated",
-                          description: `Marked ${order.customer_name}'s meal as paid.`,
-                        });
-                      }}
-                    >
-                      Mark Paid
-                    </Button>
-                  )}
                 </div>
               </div>
             </Card>

@@ -1,7 +1,5 @@
 
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Heart, PoundSterling } from "lucide-react";
@@ -20,7 +18,6 @@ interface PayItForwardBalance {
 const PayItForwardField = ({ formData, onFormChange }: PayItForwardFieldProps) => {
   const [balance, setBalance] = useState<PayItForwardBalance | null>(null);
   const [usePayItForward, setUsePayItForward] = useState(false);
-  const [payItForwardAmount, setPayItForwardAmount] = useState("");
 
   useEffect(() => {
     const fetchBalance = async () => {
@@ -42,15 +39,11 @@ const PayItForwardField = ({ formData, onFormChange }: PayItForwardFieldProps) =
 
   const handleUsePayItForwardChange = (checked: boolean) => {
     setUsePayItForward(checked);
-    if (!checked) {
-      setPayItForwardAmount("");
-      onFormChange({ payItForwardAmount: "" });
+    if (checked) {
+      onFormChange({ payItForwardAmount: "7", paidAmount: "7" });
+    } else {
+      onFormChange({ payItForwardAmount: "", paidAmount: "" });
     }
-  };
-
-  const handleAmountChange = (value: string) => {
-    setPayItForwardAmount(value);
-    onFormChange({ payItForwardAmount: value });
   };
 
   if (!balance || balance.current_balance <= 0) {
@@ -77,39 +70,7 @@ const PayItForwardField = ({ formData, onFormChange }: PayItForwardFieldProps) =
       </div>
 
       {usePayItForward && (
-        <div className="space-y-2">
-          <Label htmlFor="payItForwardAmount">Amount to Use (£)</Label>
-          <Input
-            id="payItForwardAmount"
-            type="number"
-            step="0.01"
-            max={balance.current_balance}
-            value={payItForwardAmount}
-            onChange={(e) => handleAmountChange(e.target.value)}
-            placeholder="0.00"
-            className="border-pink-200 focus:border-pink-400"
-          />
-          <div className="flex space-x-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => handleAmountChange((balance.current_balance / 2).toFixed(2))}
-              className="border-pink-300 text-pink-700 hover:bg-pink-50"
-            >
-              Half (£{(balance.current_balance / 2).toFixed(2)})
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => handleAmountChange(balance.current_balance.toFixed(2))}
-              className="border-pink-300 text-pink-700 hover:bg-pink-50"
-            >
-              All (£{balance.current_balance.toFixed(2)})
-            </Button>
-          </div>
-        </div>
+        <div className="text-sm text-pink-700">£7 will be applied from the fund</div>
       )}
     </div>
   );
